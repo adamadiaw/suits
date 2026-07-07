@@ -17,6 +17,7 @@ import AdminLayout from './AdminLayout.jsx';
 import AdminDashboard from './AdminDashboard.jsx';
 import AdminProducts from './AdminProducts.jsx';
 import AdminOrders from './AdminOrders.jsx';
+import AdminTenants from './AdminTenants.jsx';
 
 // Vérifier si l'utilisateur est connecté
 useAuthStore.getState().checkAuth();
@@ -40,6 +41,7 @@ createRoot(document.getElementById('root')).render(
           {/* <Route path="orders" element={<div>Gestion des commandes (à venir)</div>} /> */}
           <Route path="products" element={<AdminProducts />} />
           <Route path="orders" element={<AdminOrders />} />
+          <Route path="tenants" element={<AdminTenants />} />
         </Route>
 
       </Routes>

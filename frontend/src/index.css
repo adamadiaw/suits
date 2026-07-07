@@ -1,2 +1,54 @@
-/* 1. Importer les bases de Tailwind */
+/* frontend/src/index.css */
+
 @import "tailwindcss";
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #fafafa;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Playfair Display', serif;
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+/* Effet de survol sur les cartes */
+.product-card {
+  transition: all 0.3s ease;
+}
+
+.product-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+/* Badge promotion */
+.promo-badge {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+}
+
+/* Bouton élégant */
+.btn-elegant {
+  background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+  transition: all 0.3s ease;
+}
+
+.btn-elegant:hover {
+  transform: scale(1.02);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}

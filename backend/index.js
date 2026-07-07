@@ -31,12 +31,31 @@ app.get('/api/hello', (req, res) => {
   res.json({ message: 'API fonctionne ! ✅' });
 });
 
-// ROUTE 2 : Produits en vedette (DOIT ÊTRE AVANT /:id)
-app.get('/api/products/featured', async (req, res) => {
+// Route : Récupérer les produits d'une boutique spécifique
+app.get('/api/products', async (req, res) => {
   try {
+    const { tenantId } = req.query;
+
+    let whereClause = {};
+    
+    if (tenantId) {
+      // Si un tenantId est passé, filtrer par cette boutique
+      whereClause = { tenantId: tenantId };
+    } else {
+      // Sinon, prendre la première boutique (par défaut)
+      const defaultTenant = await prisma.tenant.findFirst();
+      if (defaultTenant) {
+        whereClause = { tenantId: defaultTenant.id };
+      }
+    }
+
     const products = await prisma.product.findMany({
-      where: { isFeatured: true },
+      where: whereClause,
+      include: {
+        tenant: true,
+      },
     });
+    
     res.json(products);
   } catch (error) {
     console.error('Erreur:', error);
@@ -44,10 +63,29 @@ app.get('/api/products/featured', async (req, res) => {
   }
 });
 
-// ROUTE 3 : Tous les produits
-app.get('/api/products', async (req, res) => {
+// Route : Produits en vedette d'une boutique
+app.get('/api/products/featured', async (req, res) => {
   try {
-    const products = await prisma.product.findMany();
+    const { tenantId } = req.query;
+
+    let whereClause = { isFeatured: true };
+    
+    if (tenantId) {
+      whereClause = { ...whereClause, tenantId: tenantId };
+    } else {
+      const defaultTenant = await prisma.tenant.findFirst();
+      if (defaultTenant) {
+        whereClause = { ...whereClause, tenantId: defaultTenant.id };
+      }
+    }
+
+    const products = await prisma.product.findMany({
+      where: whereClause,
+      include: {
+        tenant: true,
+      },
+    });
+    
     res.json(products);
   } catch (error) {
     console.error('Erreur:', error);
@@ -315,10 +353,26 @@ app.post('/api/auth/login', async (req, res) => {
 // ROUTES ADMIN - PROTÉGÉES
 // ============================================
 
-// Route : Récupérer tous les produits (admin)
+// Route : Récupérer les produits de la boutique de l'admin
 app.get('/api/admin/products', authenticate, isAdmin, async (req, res) => {
   try {
+    // Récupérer l'admin et sa boutique
+    const admin = await prisma.user.findUnique({
+      where: { id: req.user.userId },
+      include: { tenant: true }
+    });
+
+    console.log('🔍 Admin connecté:', admin?.email);
+    console.log('🏪 Tenant ID:', admin?.tenantId);
+
+    if (!admin || !admin.tenantId) {
+      return res.status(400).json({ error: 'Admin sans boutique' });
+    }
+
     const products = await prisma.product.findMany({
+      where: { 
+        tenantId: admin.tenantId 
+      },
       include: {
         tenant: true,
       },
@@ -326,6 +380,9 @@ app.get('/api/admin/products', authenticate, isAdmin, async (req, res) => {
         createdAt: 'desc',
       },
     });
+
+    console.log(`📦 ${products.length} produits trouvés pour la boutique`);
+
     res.json(products);
   } catch (error) {
     console.error('Erreur:', error);
@@ -333,15 +390,19 @@ app.get('/api/admin/products', authenticate, isAdmin, async (req, res) => {
   }
 });
 
-// Route : Créer un produit
+// Route : Créer un produit (dans la boutique de l'admin)
 app.post('/api/admin/products', authenticate, isAdmin, async (req, res) => {
   try {
     const { name, slug, description, price, comparePrice, stock, images, colors, sizes, gender, isFeatured } = req.body;
 
-    // Récupérer le tenant
-    const tenant = await prisma.tenant.findFirst();
-    if (!tenant) {
-      return res.status(400).json({ error: 'Aucune boutique trouvée' });
+    // Récupérer l'admin et sa boutique
+    const admin = await prisma.user.findUnique({
+      where: { id: req.user.userId },
+      include: { tenant: true }
+    });
+
+    if (!admin || !admin.tenantId) {
+      return res.status(400).json({ error: 'Admin sans boutique' });
     }
 
     const product = await prisma.product.create({
@@ -357,7 +418,7 @@ app.post('/api/admin/products', authenticate, isAdmin, async (req, res) => {
         sizes: sizes || [],
         gender: gender || 'unisexe',
         isFeatured: isFeatured || false,
-        tenantId: tenant.id,
+        tenantId: admin.tenantId,
       },
     });
 
@@ -474,6 +535,95 @@ app.get('/api/admin/stats', authenticate, isAdmin, async (req, res) => {
       totalUsers,
       revenue,
     });
+  } catch (error) {
+    console.error('Erreur:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// Route : Récupérer les produits de la boutique de l'admin
+app.get('/api/admin/products', authenticate, isAdmin, async (req, res) => {
+  try {
+    // Récupérer l'admin et sa boutique
+    const admin = await prisma.user.findUnique({
+      where: { id: req.user.userId },
+      include: { tenant: true }
+    });
+
+    if (!admin || !admin.tenantId) {
+      return res.status(400).json({ error: 'Admin sans boutique' });
+    }
+
+    const products = await prisma.product.findMany({
+      where: { tenantId: admin.tenantId },
+      include: {
+        tenant: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+    
+    res.json(products);
+  } catch (error) {
+    console.error('Erreur:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// Route : Créer une boutique
+app.post('/api/admin/tenants', authenticate, isAdmin, async (req, res) => {
+  try {
+    const { name, subdomain, logo } = req.body;
+
+    const tenant = await prisma.tenant.create({
+      data: {
+        name,
+        subdomain,
+        logo: logo || '',
+      },
+    });
+
+    res.status(201).json(tenant);
+  } catch (error) {
+    console.error('Erreur:', error);
+    res.status(500).json({ error: 'Erreur lors de la création' });
+  }
+});
+
+// Route : Récupérer une boutique par sous-domaine (pour le frontend)
+app.get('/api/tenants/:subdomain', async (req, res) => {
+  try {
+    const { subdomain } = req.params;
+    const tenant = await prisma.tenant.findUnique({
+      where: { subdomain },
+      include: {
+        products: true,
+      },
+    });
+
+    if (!tenant) {
+      return res.status(404).json({ error: 'Boutique non trouvée' });
+    }
+
+    res.json(tenant);
+  } catch (error) {
+    console.error('Erreur:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// Route : Récupérer toutes les boutiques
+app.get('/api/tenants', async (req, res) => {
+  try {
+    const tenants = await prisma.tenant.findMany({
+      include: {
+        _count: {
+          select: { products: true }
+        }
+      }
+    });
+    res.json(tenants);
   } catch (error) {
     console.error('Erreur:', error);
     res.status(500).json({ error: 'Erreur serveur' });
