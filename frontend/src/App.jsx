@@ -95,7 +95,9 @@ function App() {
           <div className="flex items-center gap-4">
             {isAuthenticated ? (
               <>
-                <span className="text-sm text-gray-600">👤 {user?.firstName}</span>
+               <Link to="/account" className="text-sm text-gray-600 hover:text-gray-900">
+                👤 {user?.firstName}
+              </Link>
                 <button 
                   onClick={logout}
                   className="text-sm text-gray-600 hover:text-gray-900"

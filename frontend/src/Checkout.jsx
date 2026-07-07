@@ -4,11 +4,14 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCartStore } from './store/cartStore';
 import axios from 'axios';
+import { useAuthStore } from './store/authStore';
+
 
 function Checkout() {
   const navigate = useNavigate();
   const { items, getTotalPrice, clearCart } = useCartStore();
   const totalPrice = getTotalPrice();
+  const { user, isAuthenticated } = useAuthStore();
 
   // États pour le formulaire
   const [formData, setFormData] = useState({
@@ -57,6 +60,7 @@ const handleSubmit = async (e) => {
       })),
       total: totalPrice,
       customer: formData,
+      userId: isAuthenticated ? user.id : null, // ← AJOUT ICI
     };
 
     console.log('📦 Envoi de la commande...', orderData);

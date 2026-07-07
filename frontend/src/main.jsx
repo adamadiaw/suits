@@ -12,6 +12,7 @@ import Confirmation from './Confirmation.jsx';
 import Register from './Register.jsx';
 import Login from './Login.jsx';
 import { useAuthStore } from './store/authStore';
+import Account from './Account.jsx';
 
 // Vérifier si l'utilisateur est connecté
 useAuthStore.getState().checkAuth();
@@ -27,6 +28,7 @@ createRoot(document.getElementById('root')).render(
         <Route path="/confirmation" element={<Confirmation />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/account" element={<Account />} />
       </Routes>
     </BrowserRouter>
   </StrictMode>,

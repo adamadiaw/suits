@@ -75,37 +75,50 @@ app.get('/api/products/:id', async (req, res) => {
 // Route : Créer une commande
 app.post('/api/orders', async (req, res) => {
   try {
-    const { items, total, customer } = req.body;
+    const { items, total, customer, userId } = req.body;
 
-    // 1. Récupérer le tenant (pour l'instant, on prend le premier)
+    // 1. Récupérer le tenant
     const tenant = await prisma.tenant.findFirst();
     if (!tenant) {
       return res.status(400).json({ error: 'Aucune boutique trouvée' });
     }
 
-    // 2. Récupérer ou créer un utilisateur
-    let user = await prisma.user.findUnique({
-      where: { email: customer.email }
-    });
+    // 2. Gérer l'utilisateur
+    let user;
 
-    if (!user) {
-      // Créer un utilisateur avec le même email
-      user = await prisma.user.create({
-        data: {
-          email: customer.email,
-          password: 'temporaire', // On améliorera plus tard
-          firstName: customer.firstName,
-          lastName: customer.lastName,
-          phone: customer.phone || '',
-          address: customer.address,
-          city: customer.city,
-          role: 'customer',
-          tenantId: tenant.id,
-        },
+    if (userId) {
+      // Si userId est fourni, on utilise cet utilisateur
+      user = await prisma.user.findUnique({
+        where: { id: userId }
       });
+      if (!user) {
+        return res.status(400).json({ error: 'Utilisateur non trouvé' });
+      }
+    } else {
+      // Si pas de userId, on cherche par email ou on crée un compte
+      user = await prisma.user.findUnique({
+        where: { email: customer.email }
+      });
+
+      if (!user) {
+        // Créer un compte sans mot de passe (guest)
+        user = await prisma.user.create({
+          data: {
+            email: customer.email,
+            password: 'guest_' + Date.now(), // Mot de passe temporaire
+            firstName: customer.firstName,
+            lastName: customer.lastName,
+            phone: customer.phone || '',
+            address: customer.address,
+            city: customer.city,
+            role: 'customer',
+            tenantId: tenant.id,
+          },
+        });
+      }
     }
 
-    // 3. Générer un numéro de commande unique
+    // 3. Générer un numéro de commande
     const orderNumber = 'CMD-' + Date.now().toString().slice(-8);
 
     // 4. Créer la commande
@@ -113,7 +126,7 @@ app.post('/api/orders', async (req, res) => {
       data: {
         orderNumber: orderNumber,
         total: total,
-        subtotal: total, // Pour l'instant
+        subtotal: total,
         tax: 0,
         shipping: 0,
         status: 'pending',
@@ -140,7 +153,7 @@ app.post('/api/orders', async (req, res) => {
       },
     });
 
-    console.log(`✅ Commande ${orderNumber} créée !`);
+    console.log(`✅ Commande ${orderNumber} créée pour ${user.email}`);
 
     res.status(201).json({
       success: true,
@@ -154,6 +167,31 @@ app.post('/api/orders', async (req, res) => {
   }
 });
 
+// Route : Récupérer les commandes d'un utilisateur
+app.get('/api/orders/user/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const orders = await prisma.order.findMany({
+      where: { userId: userId },
+      include: {
+        items: {
+          include: {
+            product: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    res.json(orders);
+  } catch (error) {
+    console.error('Erreur:', error);
+    res.status(500).json({ error: 'Erreur lors de la récupération des commandes' });
+  }
+});
 
 app.listen(PORT, () => {
   console.log(` API tourne sur http://localhost:${PORT}`);
