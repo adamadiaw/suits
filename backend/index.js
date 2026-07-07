@@ -10,6 +10,8 @@ const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
+const { authenticate, isAdmin } = require('./middleware/auth');
+
 dotenv.config();
 
 // Créer le client Prisma (pour parler à la base)
@@ -306,5 +308,174 @@ app.post('/api/auth/login', async (req, res) => {
   } catch (error) {
     console.error('Erreur connexion:', error);
     res.status(500).json({ error: 'Erreur lors de la connexion' });
+  }
+});
+
+// ============================================
+// ROUTES ADMIN - PROTÉGÉES
+// ============================================
+
+// Route : Récupérer tous les produits (admin)
+app.get('/api/admin/products', authenticate, isAdmin, async (req, res) => {
+  try {
+    const products = await prisma.product.findMany({
+      include: {
+        tenant: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+    res.json(products);
+  } catch (error) {
+    console.error('Erreur:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// Route : Créer un produit
+app.post('/api/admin/products', authenticate, isAdmin, async (req, res) => {
+  try {
+    const { name, slug, description, price, comparePrice, stock, images, colors, sizes, gender, isFeatured } = req.body;
+
+    // Récupérer le tenant
+    const tenant = await prisma.tenant.findFirst();
+    if (!tenant) {
+      return res.status(400).json({ error: 'Aucune boutique trouvée' });
+    }
+
+    const product = await prisma.product.create({
+      data: {
+        name,
+        slug,
+        description,
+        price: parseFloat(price),
+        comparePrice: comparePrice ? parseFloat(comparePrice) : null,
+        stock: parseInt(stock),
+        images: images || [],
+        colors: colors || [],
+        sizes: sizes || [],
+        gender: gender || 'unisexe',
+        isFeatured: isFeatured || false,
+        tenantId: tenant.id,
+      },
+    });
+
+    res.status(201).json(product);
+  } catch (error) {
+    console.error('Erreur:', error);
+    res.status(500).json({ error: 'Erreur lors de la création' });
+  }
+});
+
+// Route : Modifier un produit
+app.put('/api/admin/products/:id', authenticate, isAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, slug, description, price, comparePrice, stock, images, colors, sizes, gender, isFeatured } = req.body;
+
+    const product = await prisma.product.update({
+      where: { id },
+      data: {
+        name,
+        slug,
+        description,
+        price: parseFloat(price),
+        comparePrice: comparePrice ? parseFloat(comparePrice) : null,
+        stock: parseInt(stock),
+        images: images || [],
+        colors: colors || [],
+        sizes: sizes || [],
+        gender: gender || 'unisexe',
+        isFeatured: isFeatured || false,
+      },
+    });
+
+    res.json(product);
+  } catch (error) {
+    console.error('Erreur:', error);
+    res.status(500).json({ error: 'Erreur lors de la modification' });
+  }
+});
+
+// Route : Supprimer un produit
+app.delete('/api/admin/products/:id', authenticate, isAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    await prisma.product.delete({
+      where: { id },
+    });
+
+    res.json({ success: true, message: 'Produit supprimé' });
+  } catch (error) {
+    console.error('Erreur:', error);
+    res.status(500).json({ error: 'Erreur lors de la suppression' });
+  }
+});
+
+// Route : Récupérer toutes les commandes (admin)
+app.get('/api/admin/orders', authenticate, isAdmin, async (req, res) => {
+  try {
+    const orders = await prisma.order.findMany({
+      include: {
+        user: true,
+        items: {
+          include: {
+            product: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+    res.json(orders);
+  } catch (error) {
+    console.error('Erreur:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// Route : Modifier le statut d'une commande
+app.put('/api/admin/orders/:id/status', authenticate, isAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const order = await prisma.order.update({
+      where: { id },
+      data: { status },
+    });
+
+    res.json(order);
+  } catch (error) {
+    console.error('Erreur:', error);
+    res.status(500).json({ error: 'Erreur lors de la mise à jour' });
+  }
+});
+
+// Route : Statistiques (admin)
+app.get('/api/admin/stats', authenticate, isAdmin, async (req, res) => {
+  try {
+    const totalProducts = await prisma.product.count();
+    const totalOrders = await prisma.order.count();
+    const totalUsers = await prisma.user.count();
+
+    // Calcul du chiffre d'affaires
+    const orders = await prisma.order.findMany({
+      where: { status: { not: 'cancelled' } },
+    });
+    const revenue = orders.reduce((sum, order) => sum + order.total, 0);
+
+    res.json({
+      totalProducts,
+      totalOrders,
+      totalUsers,
+      revenue,
+    });
+  } catch (error) {
+    console.error('Erreur:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
   }
 });

@@ -95,6 +95,11 @@ function App() {
           <div className="flex items-center gap-4">
             {isAuthenticated ? (
               <>
+              {user?.role === 'admin' && (
+                <Link to="/admin" className="text-sm text-gray-600 hover:text-gray-900">
+                  ⚙️ Admin
+                </Link>
+              )}
                <Link to="/account" className="text-sm text-gray-600 hover:text-gray-900">
                 👤 {user?.firstName}
               </Link>
