@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCartStore } from './store/cartStore';
+import axios from 'axios';
 
 function Checkout() {
   const navigate = useNavigate();
@@ -38,51 +39,54 @@ function Checkout() {
     });
   };
 
-  // Soumettre la commande
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
+ // Soumettre la commande
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  setError('');
 
-    try {
-      // 1. Préparer les données de la commande
-      const orderData = {
-        items: items.map(item => ({
-          productId: item.id,
-          quantity: item.quantity,
-          price: item.price,
-          size: item.size,
-          color: item.color,
-        })),
-        total: totalPrice,
-        customer: formData,
-      };
+  try {
+    // 1. Préparer les données de la commande
+    const orderData = {
+      items: items.map(item => ({
+        productId: item.id,
+        quantity: item.quantity,
+        price: item.price,
+        size: item.size,
+        color: item.color,
+      })),
+      total: totalPrice,
+      customer: formData,
+    };
 
-      console.log('📦 Commande soumise :', orderData);
+    console.log('📦 Envoi de la commande...', orderData);
 
-      // 2. Simuler une attente (comme un appel API)
-      await new Promise(resolve => setTimeout(resolve, 1000));
+    // 2. Envoyer au backend
+    const response = await axios.post('http://localhost:5000/api/orders', orderData);
+    
+    console.log('✅ Commande créée :', response.data);
 
-      // 3. Préparer les infos pour la confirmation
-      const orderId = 'CMD-' + Date.now();
-      const customerName = formData.firstName + ' ' + formData.lastName;
+    // 3. Préparer les infos pour la confirmation
+    const orderId = response.data.order.orderNumber;
+    const customerName = formData.firstName + ' ' + formData.lastName;
 
-      // 4. Vider le panier
-      clearCart();
+    // 4. Vider le panier
+    clearCart();
 
-      // 5. Rediriger vers la page de confirmation
-      navigate('/confirmation', { 
-        state: { 
-          orderId: orderId,
-          customerName: customerName
-        }
-      });
+    // 5. Rediriger vers la page de confirmation
+    navigate('/confirmation', { 
+      state: { 
+        orderId: orderId,
+        customerName: customerName
+      }
+    });
 
-    } catch (err) {
-      setError('Une erreur est survenue. Veuillez réessayer.');
-      setLoading(false);
-    }
-  };
+  } catch (err) {
+    console.error('❌ Erreur:', err);
+    setError('Une erreur est survenue. Veuillez réessayer.');
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-gray-50">

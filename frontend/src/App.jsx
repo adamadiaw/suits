@@ -3,13 +3,14 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 import { useCartStore } from './store/cartStore';
+import { useAuthStore } from './store/authStore';
 
 function App() {
   const [products, setProducts] = useState([]);
   const [featured, setFeatured] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  
+  const { user, isAuthenticated, logout } = useAuthStore();
   const totalItems = useCartStore((state) => state.getTotalItems());
 
   // Fonction pour récupérer les produits
@@ -90,6 +91,30 @@ function App() {
               </button>
             </Link>
           </div>
+
+          <div className="flex items-center gap-4">
+            {isAuthenticated ? (
+              <>
+                <span className="text-sm text-gray-600">👤 {user?.firstName}</span>
+                <button 
+                  onClick={logout}
+                  className="text-sm text-gray-600 hover:text-gray-900"
+                >
+                  Déconnexion
+                </button>
+              </>
+            ) : (
+              <>
+                <Link to="/login" className="text-sm text-gray-600 hover:text-gray-900">
+                  Connexion
+                </Link>
+                <Link to="/register" className="text-sm bg-gray-900 text-white px-4 py-2 rounded hover:bg-gray-800">
+                  Inscription
+                </Link>
+              </>
+            )}
+          </div>
+
         </div>
       </header>
 
