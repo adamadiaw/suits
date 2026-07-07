@@ -1,0 +1,112 @@
+// backend/prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL") 
+  
+}
+
+model Tenant {
+  id        String   @id @default(cuid())
+  name      String
+  subdomain String   @unique
+  logo      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  products  Product[]
+  users     User[]
+  orders    Order[]
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String
+  price       Float
+  comparePrice Float?
+  stock       Int      @default(0)
+  images      String[]
+  colors      String[]
+  sizes       String[]
+  gender      String?
+  isFeatured  Boolean  @default(false)
+  rating      Float    @default(0)
+  tenantId    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  orderItems  OrderItem[]
+  cartItems   CartItem[]
+}
+
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  password    String
+  firstName   String
+  lastName    String
+  phone       String?
+  address     String?
+  city        String?
+  role        String   @default("customer")
+  tenantId    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  tenant      Tenant?  @relation(fields: [tenantId], references: [id])
+  orders      Order[]
+  cart        CartItem[]
+}
+
+model CartItem {
+  id          String   @id @default(cuid())
+  quantity    Int      @default(1)
+  userId      String
+  productId   String
+  size        String?
+  color       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  user        User     @relation(fields: [userId], references: [id])
+  product     Product  @relation(fields: [productId], references: [id])
+}
+
+model Order {
+  id          String   @id @default(cuid())
+  orderNumber String   @unique
+  status      String   @default("pending")
+  total       Float
+  subtotal    Float
+  tax         Float
+  shipping    Float
+  userId      String
+  tenantId    String
+  address     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  user        User     @relation(fields: [userId], references: [id])
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  items       OrderItem[]
+}
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  orderId     String
+  productId   String
+  quantity    Int
+  price       Float
+  size        String?
+  color       String?
+  
+  order       Order    @relation(fields: [orderId], references: [id])
+  product     Product  @relation(fields: [productId], references: [id])
+}
