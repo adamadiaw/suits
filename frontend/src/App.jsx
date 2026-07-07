@@ -1,12 +1,16 @@
 // frontend/src/App.jsx
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { Link } from 'react-router-dom';
+import { useCartStore } from './store/cartStore';
 
 function App() {
   const [products, setProducts] = useState([]);
   const [featured, setFeatured] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  
+  const totalItems = useCartStore((state) => state.getTotalItems());
 
   // Fonction pour récupérer les produits
   const fetchProducts = async () => {
@@ -67,13 +71,25 @@ function App() {
     <div className="min-h-screen bg-gray-50">
       {/* HEADER */}
       <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <h1 className="text-3xl font-bold text-gray-900">
-            👜 Luxe Bags
-          </h1>
-          <p className="text-gray-600 mt-1">
-            {products.length} sacs disponibles
-          </p>
+        <div className="max-w-7xl mx-auto px-4 py-6 flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">👜 Luxe Bags</h1>
+            <p className="text-gray-600 mt-1">{products.length} sacs disponibles</p>
+          </div>
+          
+          {/* Icône du panier */}
+          <div className="relative">
+            <Link to="/cart" className="relative">
+              <button className="text-2xl p-2 hover:bg-gray-100 rounded-full transition-colors">
+                🛒
+                {totalItems > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+                    {totalItems}
+                  </span>
+                )}
+              </button>
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -230,9 +246,11 @@ function ProductCard({ product }) {
 )}
 
         {/* Bouton Voir détails */}
-        <button className="mt-3 w-full bg-gray-900 text-white py-2 rounded hover:bg-gray-800 transition-colors text-sm">
-          Voir le sac
-        </button>
+        <Link to={`/product/${product.id}`}>
+          <button className="mt-3 w-full bg-gray-900 text-white py-2 rounded hover:bg-gray-800 transition-colors text-sm">
+            Voir le sac
+          </button>
+        </Link>
       </div>
     </div>
   );
