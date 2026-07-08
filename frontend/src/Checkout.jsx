@@ -5,6 +5,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useCartStore } from './store/cartStore';
 import { useAuthStore } from './store/authStore';
 import axios from 'axios';
+import { useTenantStore } from './store/tenantStore';
+
 
 // Icônes SVG
 const Icons = {
@@ -78,6 +80,7 @@ function Checkout() {
   const { items, getTotalPrice, clearCart } = useCartStore();
   const totalPrice = getTotalPrice();
   const { user, isAuthenticated } = useAuthStore();
+  const { currentTenant } = useTenantStore();
 
   // Pré-remplir le formulaire si l'utilisateur est connecté
   useEffect(() => {
@@ -135,6 +138,7 @@ function Checkout() {
         total: totalPrice,
         customer: formData,
         userId: isAuthenticated ? user.id : null,
+        tenantId: currentTenant?.id,
       };
 
       console.log('📦 Envoi de la commande...', orderData);

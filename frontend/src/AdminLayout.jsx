@@ -59,7 +59,7 @@ function AdminLayout() {
   }
 
   const navItems = [
-    { to: '/admin', label: 'Dashboard', icon: <Icons.Dashboard /> },
+    { to: '/admin', label: 'Tableau de bord', icon: <Icons.Dashboard /> },
     { to: '/admin/products', label: 'Produits', icon: <Icons.Package /> },
     { to: '/admin/orders', label: 'Commandes', icon: <Icons.ShoppingBag /> },
     { to: '/admin/tenants', label: 'Boutiques', icon: <Icons.Store /> },
@@ -74,7 +74,7 @@ function AdminLayout() {
           <div className="p-1.5 bg-white/10 rounded-lg">
             <Icons.Settings />
           </div>
-          <span className="text-lg font-bold tracking-tight">Admin</span>
+          <span className="text-lg font-bold tracking-tight">Administration</span>
         </div>
 
         {/* Navigation */}

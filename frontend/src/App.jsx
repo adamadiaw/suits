@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import { useCartStore } from './store/cartStore';
 import { useAuthStore } from './store/authStore';
 import { useTenantStore } from './store/tenantStore';
+import logoOmnia from './assets/logo.png';
 
 // Icônes SVG
 const Icons = {
@@ -61,7 +62,9 @@ function App() {
   const { user, isAuthenticated, logout } = useAuthStore();
   const { tenants, currentTenant, loadTenants, setCurrentTenant, loadCurrentTenant } = useTenantStore();
   const totalItems = useCartStore((state) => state.getTotalItems());
+  const initCart = useCartStore((state) => state.initCart);
 
+  // Charger les boutiques au démarrage
   useEffect(() => {
     const savedTenant = loadCurrentTenant();
     loadTenants().then(() => {
@@ -71,6 +74,14 @@ function App() {
     });
   }, []);
 
+  // 👇 CORRECTION : Quand currentTenant change, on initialise le panier
+  useEffect(() => {
+    if (currentTenant) {
+      initCart(currentTenant.id);
+    }
+  }, [currentTenant, initCart]);
+
+  // Récupérer les produits quand la boutique change
   useEffect(() => {
     if (!currentTenant) return;
 
@@ -99,6 +110,14 @@ function App() {
 
     fetchProducts();
   }, [currentTenant]);
+
+  // Gestion du changement de boutique
+  const handleTenantChange = (tenantId) => {
+    const tenant = tenants.find(t => t.id === tenantId);
+    if (tenant) {
+      setCurrentTenant(tenant);
+    }
+  };
 
   if (loading) {
     return (
@@ -135,12 +154,14 @@ function App() {
           <div className="flex items-center justify-between">
             {/* Logo */}
             <div className="flex items-center gap-3">
-              <div className="text-gray-800">
-                <Icons.Bag />
-              </div>
+              <img 
+                src={logoOmnia} 
+                alt="OMNIA" 
+                className="w-10 h-10 object-contain"
+              />
               <div>
                 <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
-                  Luxe Bags
+                  OMNIA
                 </h1>
                 <p className="text-xs text-gray-400 -mt-1">Collections exclusives</p>
               </div>
@@ -151,10 +172,7 @@ function App() {
               <div className="relative">
                 <select
                   value={currentTenant?.id || ''}
-                  onChange={(e) => {
-                    const tenant = tenants.find(t => t.id === e.target.value);
-                    if (tenant) setCurrentTenant(tenant);
-                  }}
+                  onChange={(e) => handleTenantChange(e.target.value)}
                   className="appearance-none bg-gray-50 border border-gray-200 rounded-full px-4 py-2 pr-10 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-gray-900"
                 >
                   {tenants.map((tenant) => (
@@ -235,7 +253,7 @@ function App() {
         {/* SECTION : TOUS LES PRODUITS */}
         <section>
           <h2 className="text-2xl font-bold text-gray-900 mb-6">
-            Tous nos sacs
+            Tous nos produits
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {products.map((product) => (
@@ -248,6 +266,7 @@ function App() {
   );
 }
 
+// COMPOSANT CARTE PRODUIT
 function ProductCard({ product }) {
   const hasDiscount = product.comparePrice && product.comparePrice > product.price;
   const discountPercentage = hasDiscount 
@@ -287,7 +306,6 @@ function ProductCard({ product }) {
 
       {/* Contenu */}
       <div className="p-4">
-        {/* Genre et tailles */}
         <div className="flex items-center justify-between text-xs text-gray-400 mb-2">
           <span>
             {product.gender === 'femme' ? 'Femme' : 
@@ -297,12 +315,10 @@ function ProductCard({ product }) {
           <span>{product.sizes?.join(' · ')}</span>
         </div>
         
-        {/* Nom */}
         <h3 className="font-semibold text-gray-900 text-sm mb-1 line-clamp-2 leading-relaxed">
           {product.name}
         </h3>
         
-        {/* Prix */}
         <div className="flex items-baseline justify-between mt-3">
           <div>
             <span className="text-xl font-bold text-gray-900">
@@ -322,7 +338,6 @@ function ProductCard({ product }) {
           </div>
         </div>
 
-        {/* Couleurs */}
         {product.colors && product.colors.length > 0 && (
           <div className="flex gap-1.5 mt-3">
             {product.colors.slice(0, 4).map((color) => (
@@ -341,10 +356,9 @@ function ProductCard({ product }) {
           </div>
         )}
 
-        {/* Bouton */}
         <Link to={`/product/${product.id}`}>
           <button className="mt-4 w-full bg-gray-900 text-white py-2.5 rounded-full hover:bg-gray-800 transition-all text-sm font-medium hover:shadow-lg hover:shadow-gray-900/20">
-            Voir le sac
+            Voir le produit
           </button>
         </Link>
       </div>

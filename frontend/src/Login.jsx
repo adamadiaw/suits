@@ -67,7 +67,12 @@ function Login() {
 
       if (response.data.success) {
         login(response.data.user, response.data.token);
-        navigate('/');
+        // Si l'utilisateur est admin, rediriger vers /admin
+        if (response.data.user.role === 'admin') {
+          navigate('/admin');
+        } else {
+          navigate('/');
+        }
       }
     } catch (err) {
       setError(err.response?.data?.error || 'Email ou mot de passe incorrect');

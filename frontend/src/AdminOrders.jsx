@@ -239,18 +239,33 @@ function AdminOrders() {
                 <p className="text-sm text-gray-500">{selectedOrder.user.email}</p>
               </div>
 
-              {/* Adresse */}
+              {/* 👇 CORRECTION : Adresse parsée */}
               <div className="border-t border-gray-100 pt-4 mb-4">
                 <h3 className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                   <Icons.Home />
                   Livraison
                 </h3>
-                <p className="text-sm text-gray-600 whitespace-pre-line">
-                  {selectedOrder.address}
-                </p>
+                {(() => {
+                  try {
+                    const address = JSON.parse(selectedOrder.address);
+                    return (
+                      <div className="text-sm text-gray-600 space-y-0.5">
+                        <p>{address.address || ''}</p>
+                        <p>{address.postalCode || ''} {address.city || ''}</p>
+                        <p>{address.country || ''}</p>
+                      </div>
+                    );
+                  } catch (e) {
+                    return (
+                      <p className="text-sm text-gray-600 whitespace-pre-line">
+                        {selectedOrder.address}
+                      </p>
+                    );
+                  }
+                })()}
               </div>
 
-              {/* Articles */}
+              {/* 👇 CORRECTION : Articles avec affichage sécurisé */}
               <div className="border-t border-gray-100 pt-4 mb-4">
                 <h3 className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                   <Icons.Package />
@@ -260,7 +275,7 @@ function AdminOrders() {
                   {selectedOrder.items.map((item) => (
                     <div key={item.id} className="flex justify-between text-sm py-1.5 border-b border-gray-50">
                       <span className="text-gray-600">
-                        {item.product.name} 
+                        {item.product?.name || 'Produit supprimé'} 
                         {item.size && <span className="text-gray-400"> ({item.size})</span>}
                         {item.color && <span className="text-gray-400"> - {item.color}</span>}
                         <span className="text-gray-400 ml-1">×{item.quantity}</span>

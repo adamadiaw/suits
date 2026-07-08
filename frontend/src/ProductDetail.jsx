@@ -1,9 +1,10 @@
 // frontend/src/ProductDetail.jsx
 
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useCartStore } from './store/cartStore';
+import Toast from './components/Toast';
 
 // Icônes SVG
 const Icons = {
@@ -57,16 +58,31 @@ const Icons = {
 
 function ProductDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedSize, setSelectedSize] = useState(null);
   const [selectedColor, setSelectedColor] = useState(null);
+  const [toast, setToast] = useState(null);
   const addItem = useCartStore((state) => state.addItem);
 
   const handleAddToCart = () => {
+    // Si taille ou couleur sont requises mais non sélectionnées
+    // (optionnel : on peut laisser passer sans)
     addItem(product, selectedSize, selectedColor);
+    
+    // Afficher la notification
+    setToast({
+      message: ` ${product.name} ajouté au panier !`,
+      type: 'success'
+    });
+    
+    // Rediriger vers l'accueil après 1.5s
+    setTimeout(() => {
+      navigate('/');
+    }, 1500);
   };
 
   const fetchProduct = async () => {
@@ -91,7 +107,7 @@ function ProductDetail() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Chargement du sac...</p>
+          <p className="mt-4 text-gray-600">Chargement du produit...</p>
         </div>
       </div>
     );
@@ -117,6 +133,15 @@ function ProductDetail() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+      
       {/* Header avec bouton retour */}
       <header className="bg-white border-b border-gray-100 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-4">
