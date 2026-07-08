@@ -2,10 +2,10 @@
 
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuthStore } from './store/authStore';
-import { authService } from './services';
-import { logger } from './utils/logger';
-import { Icons } from './icons';
+import { useAuthStore } from '../store/authStore';
+import { authService } from '../services';
+import { logger } from '../utils/logger';
+import { Icons } from '../icons';
 
 function Login() {
   const navigate = useNavigate();

@@ -1,7 +1,7 @@
 // frontend/src/Confirmation.jsx
 
 import { Link, useLocation } from 'react-router-dom';
-import { Icons } from './icons';
+import { Icons } from '../icons';
 
 
 function Confirmation() {

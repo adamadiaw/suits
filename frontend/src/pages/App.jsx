@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useCartStore } from './store/cartStore';
-import { useAuthStore } from './store/authStore';
-import { useTenantStore } from './store/tenantStore';
-import logoOmnia from './assets/logo.png';
-import TenantSelector from './components/TenantSelector';
-import { Icons } from './icons';
-import { productService } from './services';
+import { useCartStore } from '../store/cartStore';
+import { useAuthStore } from '../store/authStore';
+import { useTenantStore } from '../store/tenantStore';
+import logoOmnia from '../assets/logo.png';
+import TenantSelector from '../components/TenantSelector';
+import { Icons } from '../icons';
+import { productService } from '../services';
 
 function App() {
   const [products, setProducts] = useState([]);

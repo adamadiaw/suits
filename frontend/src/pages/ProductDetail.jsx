@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useCartStore } from './store/cartStore';
-import { productService } from './services';
-import Toast from './components/Toast';
-import { Icons } from './icons';
+import { useCartStore } from '../store/cartStore';
+import { productService } from '../services';
+import Toast from '../components/Toast';
+import { Icons } from '../icons';
 
 function ProductDetail() {
   const { id } = useParams();

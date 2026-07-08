@@ -1,9 +1,9 @@
 // frontend/src/AdminOrders.jsx
 
 import { useState, useEffect } from 'react';
-import { useAuthStore } from './store/authStore';
-import { orderService } from './services';
-import { Icons } from './icons';
+import { useAuthStore } from '../../store/authStore';
+import { orderService } from '../../services';
+import { Icons } from '../../icons';
 
 function AdminOrders() {
   const { token } = useAuthStore();

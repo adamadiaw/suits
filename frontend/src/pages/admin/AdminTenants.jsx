@@ -1,9 +1,9 @@
 // frontend/src/AdminTenants.jsx
 
 import { useState, useEffect } from 'react';
-import { useAuthStore } from './store/authStore';
-import { adminService } from './services';
-import { Icons } from './icons';
+import { useAuthStore } from '../../store/authStore';
+import { adminService } from '../../services';
+import { Icons } from '../../icons';
 
 function AdminTenants() {
   const { token } = useAuthStore();

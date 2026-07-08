@@ -1,9 +1,9 @@
 // frontend/src/AdminProducts.jsx
 
 import { useState, useEffect } from 'react';
-import { useAuthStore } from './store/authStore';
-import { productService } from './services';
-import { Icons } from './icons';
+import { useAuthStore } from '../../store/authStore';
+import { productService } from '../../services';
+import { Icons } from '../../icons';
 
 function AdminProducts() {
   const { token } = useAuthStore();

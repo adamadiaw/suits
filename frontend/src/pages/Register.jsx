@@ -2,10 +2,10 @@
 
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuthStore } from './store/authStore';
-import { useTenantStore } from './store/tenantStore';
-import { authService } from './services';
-import { Icons } from './icons';
+import { useAuthStore } from '../store/authStore';
+import { useTenantStore } from '../store/tenantStore';
+import { authService } from '../services';
+import { Icons } from '../icons';
 
 function Register() {
   const navigate = useNavigate();

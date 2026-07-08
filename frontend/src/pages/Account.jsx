@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuthStore } from './store/authStore';
-import { orderService } from './services';
-import { Icons } from './icons';
+import { useAuthStore } from '../store/authStore';
+import { orderService } from '../services';
+import { Icons } from '../icons';
 
 function Account() {
   const { user, isAuthenticated, logout } = useAuthStore();

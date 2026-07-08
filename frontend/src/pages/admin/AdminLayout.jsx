@@ -1,9 +1,9 @@
 // frontend/src/AdminLayout.jsx
 
 import { Link, Outlet, useNavigate } from 'react-router-dom';
-import { useAuthStore } from './store/authStore';
+import { useAuthStore } from '../../store/authStore';
 import { useEffect } from 'react';
-import { Icons } from './icons';
+import { Icons } from '../../icons';
 
 
 function AdminLayout() {

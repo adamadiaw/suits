@@ -1,8 +1,8 @@
 // frontend/src/Cart.jsx
 
 import { Link } from 'react-router-dom';
-import { useCartStore } from './store/cartStore';
-import { Icons } from './icons';
+import { useCartStore } from '../store/cartStore';
+import { Icons } from '../icons';
 
 
 function Cart() {
