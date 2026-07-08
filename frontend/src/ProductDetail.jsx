@@ -2,59 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { useCartStore } from './store/cartStore';
+import { productService } from './services';
 import Toast from './components/Toast';
-
-// Icônes SVG
-const Icons = {
-  ArrowLeft: () => (
-    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-    </svg>
-  ),
-  Star: () => (
-    <svg className="w-6 h-6 fill-current text-yellow-400" viewBox="0 0 20 20">
-      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-    </svg>
-  ),
-  Cart: () => (
-    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-    </svg>
-  ),
-  Check: () => (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-    </svg>
-  ),
-  X: () => (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-    </svg>
-  ),
-  Package: () => (
-    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10" />
-    </svg>
-  ),
-  Ruler: () => (
-    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-    </svg>
-  ),
-  Palette: () => (
-    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-    </svg>
-  ),
-  Loading: () => (
-    <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-    </svg>
-  ),
-};
+import { Icons } from './icons';
 
 function ProductDetail() {
   const { id } = useParams();
@@ -69,17 +20,13 @@ function ProductDetail() {
   const addItem = useCartStore((state) => state.addItem);
 
   const handleAddToCart = () => {
-    // Si taille ou couleur sont requises mais non sélectionnées
-    // (optionnel : on peut laisser passer sans)
     addItem(product, selectedSize, selectedColor);
     
-    // Afficher la notification
     setToast({
-      message: ` ${product.name} ajouté au panier !`,
+      message: `${product.name} ajouté au panier !`,
       type: 'success'
     });
     
-    // Rediriger vers l'accueil après 1.5s
     setTimeout(() => {
       navigate('/');
     }, 1500);
@@ -88,7 +35,7 @@ function ProductDetail() {
   const fetchProduct = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`http://localhost:5000/api/products/${id}`);
+      const response = await productService.getById(id);
       setProduct(response.data);
       setError('');
     } catch (err) {
@@ -117,8 +64,8 @@ function ProductDetail() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <p className="text-red-600 text-xl">❌ {error || 'Produit non trouvé'}</p>
-          <Link to="/" className="mt-4 inline-block px-4 py-2 bg-gray-900 text-white rounded">
+          <p className="text-red-600 text-xl">{error || 'Produit non trouvé'}</p>
+          <Link to="/" className="mt-4 inline-block px-4 py-2 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-colors">
             Retour à la boutique
           </Link>
         </div>
@@ -142,7 +89,7 @@ function ProductDetail() {
         />
       )}
       
-      {/* Header avec bouton retour */}
+      {/* Header */}
       <header className="bg-white border-b border-gray-100 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <Link to="/" className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors text-sm">
@@ -152,12 +99,12 @@ function ProductDetail() {
         </div>
       </header>
 
-      {/* Contenu de la page */}
+      {/* Contenu */}
       <main className="max-w-7xl mx-auto px-4 py-8">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="grid md:grid-cols-2 gap-8 p-6 md:p-8">
             
-            {/* Colonne 1 : Image */}
+            {/* Image */}
             <div className="bg-gray-100 rounded-2xl h-96 md:h-[500px] flex items-center justify-center overflow-hidden">
               {product.images && product.images.length > 0 ? (
                 <img 
@@ -170,7 +117,7 @@ function ProductDetail() {
               )}
             </div>
 
-            {/* Colonne 2 : Infos du produit */}
+            {/* Infos produit */}
             <div className="flex flex-col">
               <div className="flex items-start justify-between">
                 <h1 className="text-3xl font-bold text-gray-900">
@@ -275,7 +222,7 @@ function ProductDetail() {
                 </div>
               </div>
 
-              {/* Bouton Ajouter au panier */}
+              {/* Ajouter au panier */}
               <div className="mt-6 pt-6 border-t border-gray-100">
                 <button 
                   onClick={handleAddToCart}

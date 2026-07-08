@@ -17,6 +17,7 @@ export const useAuthStore = create((set) => ({
     });
     // Sauvegarder dans localStorage
     localStorage.setItem('auth', JSON.stringify({ user: userData, token }));
+    localStorage.setItem('auth_token', token);
   },
 
   // S'inscrire
@@ -27,6 +28,7 @@ export const useAuthStore = create((set) => ({
       isAuthenticated: true,
     });
     localStorage.setItem('auth', JSON.stringify({ user: userData, token }));
+    localStorage.setItem('auth_token', token); 
   },
 
   // Se déconnecter
@@ -37,6 +39,7 @@ export const useAuthStore = create((set) => ({
       isAuthenticated: false,
     });
     localStorage.removeItem('auth');
+    localStorage.removeItem('auth_token');
   },
 
   // Vérifier si l'utilisateur est déjà connecté (au chargement)
@@ -53,6 +56,7 @@ export const useAuthStore = create((set) => ({
         return true;
       } catch (e) {
         localStorage.removeItem('auth');
+        localStorage.removeItem('auth_token');
         return false;
       }
     }

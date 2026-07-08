@@ -2,38 +2,10 @@
 
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { useAuthStore } from './store/authStore';
-
-// Icônes SVG
-const Icons = {
-  Lock: () => (
-    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-    </svg>
-  ),
-  Mail: () => (
-    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-    </svg>
-  ),
-  Key: () => (
-    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-    </svg>
-  ),
-  Loading: () => (
-    <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-    </svg>
-  ),
-  ArrowRight: () => (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-    </svg>
-  ),
-};
+import { authService } from './services';
+import { logger } from './utils/logger';
+import { Icons } from './icons';
 
 function Login() {
   const navigate = useNavigate();
@@ -55,31 +27,35 @@ function Login() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
+  e.preventDefault();
+  setLoading(true);
+  setError('');
 
-    try {
-      const response = await axios.post('http://localhost:5000/api/auth/login', {
-        email: formData.email,
-        password: formData.password,
-      });
+  try {
+    const response = await authService.login(formData.email, formData.password);
 
-      if (response.data.success) {
-        login(response.data.user, response.data.token);
-        // Si l'utilisateur est admin, rediriger vers /admin
-        if (response.data.user.role === 'admin') {
-          navigate('/admin');
-        } else {
-          navigate('/');
-        }
+    if (response.data.success) {
+      // 👇 LOG POUR VÉRIFIER
+      logger.log('✅ Token reçu:', response.data.token);
+      logger.log('👤 User:', response.data.user);
+      
+      login(response.data.user, response.data.token);
+      
+      // Vérifier que le token est bien dans localStorage
+      logger.log('🔑 Token dans localStorage:', localStorage.getItem('auth_token'));
+      
+      if (response.data.user.role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/');
       }
-    } catch (err) {
-      setError(err.response?.data?.error || 'Email ou mot de passe incorrect');
-    } finally {
-      setLoading(false);
     }
-  };
+  } catch (err) {
+    setError(err.response?.data?.error || 'Email ou mot de passe incorrect');
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center py-12 px-4">
