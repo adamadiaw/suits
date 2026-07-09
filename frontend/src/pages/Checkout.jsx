@@ -8,6 +8,11 @@ import { useTenantStore } from '../store/tenantStore';
 import { orderService } from '../services';
 import { Icons } from '../icons';
 import { logger } from '../utils/logger';
+import { loadStripe } from '@stripe/stripe-js';
+import axios from 'axios';
+
+// Ta clé publique Stripe (à remplacer par la tienne)
+const STRIPE_PUBLISHABLE_KEY = 'pk_test_51TrLjtI7PIIIp8eA7nGwls2iobpEFixoJQslqhxP3uF2XTr5A2iO3Ck6ElYyUYfUWjSRw6y6gAwilUCDVJwo2L1E00NdyatPJ8';
 
 function Checkout() {
   const navigate = useNavigate();
@@ -61,6 +66,7 @@ function Checkout() {
     setError('');
 
     try {
+      // 1. Créer la commande dans notre base
       const orderData = {
         items: items.map(item => ({
           productId: item.id,
@@ -77,25 +83,59 @@ function Checkout() {
 
       logger.log('📦 Envoi de la commande...', orderData);
 
-      const response = await orderService.create(orderData);
+      const orderResponse = await orderService.create(orderData);
+      const orderId = orderResponse.data.order.orderNumber;
       
-      logger.log('✅ Commande créée :', response.data);
+      logger.log('✅ Commande créée :', orderResponse.data);
 
-      const orderId = response.data.order.orderNumber;
-      const customerName = formData.firstName + ' ' + formData.lastName;
+      // 2. Créer la session Stripe
+      const paymentData = {
+        items: items.map(item => ({
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          image: item.image || '',
+        })),
+        total: totalPrice,
+        orderId: orderId,
+        customerEmail: formData.email,
+      };
 
+      logger.log('💳 Création de la session Stripe...', paymentData);
+
+      const paymentResponse = await axios.post(
+        'http://localhost:5000/api/create-payment-intent',
+        paymentData
+      );
+
+      logger.log('✅ Session Stripe créée:', paymentResponse.data);
+
+      // 3. Stocker les données de commande pour la confirmation
+      sessionStorage.setItem('orderData', JSON.stringify({
+        orderId: orderId,
+        customerName: formData.firstName + ' ' + formData.lastName,
+        total: totalPrice,
+      }));
+
+      // 4. Charger Stripe.js
+      const stripe = await loadStripe(STRIPE_PUBLISHABLE_KEY);
+      
+      if (!stripe) {
+        throw new Error('Erreur de chargement de Stripe');
+      }
+
+      // 5. Redirection standard vers l'URL Stripe
+      const checkoutUrl = paymentResponse.data.url;
+      
+      // Vider le panier avant la redirection
       clearCart();
 
-      navigate('/confirmation', { 
-        state: { 
-          orderId: orderId,
-          customerName: customerName
-        }
-      });
+      // Rediriger vers Stripe Checkout
+      window.location.href = checkoutUrl;
 
     } catch (err) {
-      console.error('❌ Erreur:', err);
-      setError('Une erreur est survenue. Veuillez réessayer.');
+      logger.error('❌ Erreur:', err);
+      setError(err.response?.data?.error || err.message || 'Une erreur est survenue. Veuillez réessayer.');
       setLoading(false);
     }
   };
@@ -301,7 +341,7 @@ function Checkout() {
                   ) : (
                     <>
                       <Icons.CreditCard />
-                      Confirmer la commande
+                      Payer {totalPrice.toFixed(2)} €
                     </>
                   )}
                 </button>
@@ -334,7 +374,7 @@ function Checkout() {
               <div className="mt-4 p-3 bg-gray-50 rounded-xl">
                 <p className="text-xs text-gray-500 flex items-center gap-1">
                   <span>🔒</span>
-                  Paiement sécurisé
+                  Paiement sécurisé par Stripe
                 </p>
               </div>
             </div>

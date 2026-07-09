@@ -16,6 +16,8 @@ const prisma = new PrismaClient();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+
 app.use(cors());
 app.use(express.json());
 
@@ -709,6 +711,45 @@ app.post('/api/admin/tenants', authenticate, isAdmin, async (req, res) => {
   } catch (error) {
     console.error('Erreur:', error);
     res.status(500).json({ error: 'Erreur lors de la création' });
+  }
+});
+
+// ============================================
+// ROUTE PAIEMENT
+// ============================================
+
+// ROUTE : Créer une session de paiement Stripe
+app.post('/api/create-payment-intent', async (req, res) => {
+  try {
+    const { items, total, orderId, customerEmail } = req.body;
+
+    // 1. Créer une session de paiement
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: items.map(item => ({
+        price_data: {
+          currency: 'eur',
+          product_data: {
+            name: item.name,
+            // images: item.image ? [item.image] : [],
+          },
+          unit_amount: Math.round(item.price * 100), // Stripe utilise les centimes
+        },
+        quantity: item.quantity,
+      })),
+      mode: 'payment',
+      success_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/confirmation?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/cart`,
+      customer_email: customerEmail,
+      metadata: {
+        orderId: orderId,
+      },
+    });
+
+    res.json({ sessionId: session.id, url: session.url });
+  } catch (error) {
+    console.error('Erreur Stripe:', error);
+    res.status(500).json({ error: 'Erreur lors de la création du paiement' });
   }
 });
 
