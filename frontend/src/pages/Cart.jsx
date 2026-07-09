@@ -1,12 +1,12 @@
 // frontend/src/Cart.jsx
 
 import { Link } from 'react-router-dom';
-import { useCartStore } from '../store/cartStore';
+import { useCart } from '../hooks/useCart';
 import { Icons } from '../icons';
 
 
 function Cart() {
-  const { items, removeItem, clearCart, getTotalPrice } = useCartStore();
+  const { items, removeItem, clearCart, getTotalPrice } = useCart();
   const totalPrice = getTotalPrice();
 
   // Si le panier est vide

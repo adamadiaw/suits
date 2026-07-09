@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useCartStore } from '../store/cartStore';
+import { useCart } from '../hooks/useCart';
 import { useAuthStore } from '../store/authStore';
 import { useTenantStore } from '../store/tenantStore';
 import { orderService } from '../services';
@@ -11,7 +11,7 @@ import { logger } from '../utils/logger';
 
 function Checkout() {
   const navigate = useNavigate();
-  const { items, getTotalPrice, clearCart } = useCartStore();
+  const { items, getTotalPrice, clearCart } = useCart();
   const totalPrice = getTotalPrice();
   const { user, isAuthenticated } = useAuthStore();
   const { currentTenant } = useTenantStore();

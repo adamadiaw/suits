@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useCartStore } from '../store/cartStore';
+import { useCart } from '../hooks/useCart';
 import { productService } from '../services';
 import Toast from '../components/Toast';
 import { Icons } from '../icons';
+import { useToast } from '../hooks/useToast';
+
 
 function ProductDetail() {
   const { id } = useParams();
@@ -16,16 +18,13 @@ function ProductDetail() {
   const [error, setError] = useState('');
   const [selectedSize, setSelectedSize] = useState(null);
   const [selectedColor, setSelectedColor] = useState(null);
-  const [toast, setToast] = useState(null);
-  const addItem = useCartStore((state) => state.addItem);
+  const { toast, showToast, hideToast } = useToast();
+  const { addItem } = useCart();
 
   const handleAddToCart = () => {
     addItem(product, selectedSize, selectedColor);
     
-    setToast({
-      message: `${product.name} ajouté au panier !`,
-      type: 'success'
-    });
+    showToast(`${product.name} ajouté au panier !`, 'success');
     
     setTimeout(() => {
       navigate('/');
@@ -85,7 +84,7 @@ function ProductDetail() {
         <Toast
           message={toast.message}
           type={toast.type}
-          onClose={() => setToast(null)}
+          onClose={hideToast}
         />
       )}
       
