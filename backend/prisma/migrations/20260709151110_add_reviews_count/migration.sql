@@ -1,0 +1,8 @@
+-- AlterTable
+ALTER TABLE "Order" ADD COLUMN     "deliveredAt" TIMESTAMP(3),
+ADD COLUMN     "discount" DOUBLE PRECISION NOT NULL DEFAULT 0,
+ADD COLUMN     "paymentId" TEXT,
+ADD COLUMN     "shippedAt" TIMESTAMP(3);
+
+-- AlterTable
+ALTER TABLE "OrderItem" ADD COLUMN     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;

@@ -23,12 +23,10 @@ app.use(express.json());
 // ROUTES PUBLIQUES
 // ============================================
 
-// ROUTE : Test
 app.get('/api/hello', (req, res) => {
   res.json({ message: 'API fonctionne ! ✅' });
 });
 
-// ROUTE : Récupérer les produits d'une boutique
 app.get('/api/products', async (req, res) => {
   try {
     const { tenantId } = req.query;
@@ -56,7 +54,6 @@ app.get('/api/products', async (req, res) => {
   }
 });
 
-// ROUTE : Produits en vedette
 app.get('/api/products/featured', async (req, res) => {
   try {
     const { tenantId } = req.query;
@@ -84,7 +81,6 @@ app.get('/api/products/featured', async (req, res) => {
   }
 });
 
-// ROUTE : Produit par ID
 app.get('/api/products/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -103,7 +99,6 @@ app.get('/api/products/:id', async (req, res) => {
   }
 });
 
-// ROUTE : Récupérer toutes les boutiques (public)
 app.get('/api/tenants', async (req, res) => {
   try {
     const tenants = await prisma.tenant.findMany({
@@ -120,7 +115,6 @@ app.get('/api/tenants', async (req, res) => {
   }
 });
 
-// ROUTE : Récupérer une boutique par sous-domaine
 app.get('/api/tenants/:subdomain', async (req, res) => {
   try {
     const { subdomain } = req.params;
@@ -141,15 +135,13 @@ app.get('/api/tenants/:subdomain', async (req, res) => {
 });
 
 // ============================================
-// ROUTES D'AUTHENTIFICATION
+// ROUTES AUTH
 // ============================================
 
-// ROUTE : Inscription (CORRIGÉE)
 app.post('/api/auth/register', async (req, res) => {
   try {
     const { email, password, firstName, lastName, tenantId } = req.body;
 
-    // 1. Vérifier si l'email existe déjà
     const existingUser = await prisma.user.findUnique({
       where: { email: email }
     });
@@ -158,10 +150,8 @@ app.post('/api/auth/register', async (req, res) => {
       return res.status(400).json({ error: 'Cet email est déjà utilisé' });
     }
 
-    // 2. Hacher le mot de passe
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 3. Récupérer le tenant
     let tenant;
     if (tenantId) {
       tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
@@ -173,7 +163,6 @@ app.post('/api/auth/register', async (req, res) => {
       return res.status(400).json({ error: 'Aucune boutique trouvée' });
     }
 
-    // 4. Créer l'utilisateur
     const user = await prisma.user.create({
       data: {
         email: email,
@@ -185,7 +174,6 @@ app.post('/api/auth/register', async (req, res) => {
       },
     });
 
-    // 5. Créer un token JWT
     const token = jwt.sign(
       { userId: user.id, email: user.email, role: user.role },
       process.env.JWT_SECRET,
@@ -210,7 +198,6 @@ app.post('/api/auth/register', async (req, res) => {
   }
 });
 
-// ROUTE : Connexion
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -253,15 +240,13 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 // ============================================
-// ROUTES COMMANDES
+// ROUTES ORDERS
 // ============================================
 
-// ROUTE : Créer une commande (CORRIGÉE)
 app.post('/api/orders', async (req, res) => {
   try {
     const { items, total, customer, userId, tenantId } = req.body;
 
-    // 1. Récupérer le tenant
     let tenant;
     if (tenantId) {
       tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
@@ -273,7 +258,6 @@ app.post('/api/orders', async (req, res) => {
       return res.status(400).json({ error: 'Aucune boutique trouvée' });
     }
 
-    // 2. Gérer l'utilisateur
     let user;
 
     if (userId) {
@@ -282,7 +266,6 @@ app.post('/api/orders', async (req, res) => {
         return res.status(400).json({ error: 'Utilisateur non trouvé' });
       }
       
-      // 👇 CORRECTION : Si l'utilisateur n'a pas de tenantId, on le met à jour
       if (!user.tenantId) {
         user = await prisma.user.update({
           where: { id: user.id },
@@ -309,7 +292,6 @@ app.post('/api/orders', async (req, res) => {
           },
         });
       } else if (!user.tenantId) {
-        // Si l'utilisateur existe mais n'a pas de tenantId
         user = await prisma.user.update({
           where: { id: user.id },
           data: { tenantId: tenant.id }
@@ -317,10 +299,8 @@ app.post('/api/orders', async (req, res) => {
       }
     }
 
-    // 3. Générer un numéro de commande
     const orderNumber = 'CMD-' + Date.now().toString().slice(-8);
 
-    // 4. Créer la commande
     const order = await prisma.order.create({
       data: {
         orderNumber: orderNumber,
@@ -364,7 +344,6 @@ app.post('/api/orders', async (req, res) => {
   }
 });
 
-// ROUTE : Récupérer les commandes d'un utilisateur
 app.get('/api/orders/user/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
@@ -386,10 +365,141 @@ app.get('/api/orders/user/:userId', async (req, res) => {
 });
 
 // ============================================
-// ROUTES ADMIN - PROTÉGÉES
+// ROUTES REVIEWS
 // ============================================
 
-// ROUTE : Récupérer les produits de la boutique de l'admin
+app.get('/api/products/:productId/reviews', async (req, res) => {
+  try {
+    const { productId } = req.params;
+
+    const reviews = await prisma.review.findMany({
+      where: { productId },
+      include: {
+        user: {
+          select: {
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    const avgRating = reviews.length > 0
+      ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+      : 0;
+
+    res.json({
+      reviews,
+      averageRating: avgRating,
+      totalReviews: reviews.length,
+    });
+  } catch (error) {
+    console.error('Erreur:', error);
+    res.status(500).json({ error: 'Erreur lors de la récupération des avis' });
+  }
+});
+
+app.post('/api/products/:productId/reviews', async (req, res) => {
+  try {
+    const { productId } = req.params;
+    const { rating, comment, userId, tenantId } = req.body;
+
+    console.log('📝 Nouvel avis:', { productId, rating, comment, userId, tenantId });
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      return res.status(401).json({ error: 'Utilisateur non connecté' });
+    }
+
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+    });
+
+    if (!product) {
+      return res.status(404).json({ error: 'Produit non trouvé' });
+    }
+
+    const review = await prisma.review.create({
+      data: {
+        rating: parseInt(rating),
+        comment: comment || '',
+        userId: userId,
+        productId: productId,
+        tenantId: tenantId || product.tenantId,
+      },
+      include: {
+        user: {
+          select: {
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+    });
+
+    const allReviews = await prisma.review.findMany({
+      where: { productId },
+    });
+
+    const avgRating = allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length;
+
+    await prisma.product.update({
+      where: { id: productId },
+      data: {
+        rating: avgRating,
+        reviewsCount: allReviews.length,
+      },
+    });
+
+    console.log('✅ Avis créé:', review.id);
+    res.status(201).json(review);
+  } catch (error) {
+    console.error('❌ Erreur:', error);
+    res.status(500).json({ error: 'Erreur lors de l\'ajout de l\'avis', details: error.message });
+  }
+});
+
+app.delete('/api/admin/reviews/:id', authenticate, isAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const review = await prisma.review.delete({
+      where: { id },
+    });
+
+    const allReviews = await prisma.review.findMany({
+      where: { productId: review.productId },
+    });
+
+    const avgRating = allReviews.length > 0
+      ? allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length
+      : 0;
+
+    await prisma.product.update({
+      where: { id: review.productId },
+      data: {
+        rating: avgRating,
+        reviewsCount: allReviews.length,
+      },
+    });
+
+    res.json({ success: true, message: 'Avis supprimé' });
+  } catch (error) {
+    console.error('Erreur:', error);
+    res.status(500).json({ error: 'Erreur lors de la suppression' });
+  }
+});
+
+// ============================================
+// ROUTES ADMIN
+// ============================================
+
 app.get('/api/admin/products', authenticate, isAdmin, async (req, res) => {
   try {
     const admin = await prisma.user.findUnique({
@@ -414,7 +524,6 @@ app.get('/api/admin/products', authenticate, isAdmin, async (req, res) => {
   }
 });
 
-// ROUTE : Créer un produit
 app.post('/api/admin/products', authenticate, isAdmin, async (req, res) => {
   try {
     const { name, slug, description, price, comparePrice, stock, images, colors, sizes, gender, isFeatured } = req.body;
@@ -452,7 +561,6 @@ app.post('/api/admin/products', authenticate, isAdmin, async (req, res) => {
   }
 });
 
-// ROUTE : Modifier un produit
 app.put('/api/admin/products/:id', authenticate, isAdmin, async (req, res) => {
   try {
     const { id } = req.params;
@@ -482,7 +590,6 @@ app.put('/api/admin/products/:id', authenticate, isAdmin, async (req, res) => {
   }
 });
 
-// ROUTE : Supprimer un produit
 app.delete('/api/admin/products/:id', authenticate, isAdmin, async (req, res) => {
   try {
     const { id } = req.params;
@@ -496,7 +603,6 @@ app.delete('/api/admin/products/:id', authenticate, isAdmin, async (req, res) =>
   }
 });
 
-// ROUTE : Récupérer les commandes de la boutique de l'admin
 app.get('/api/admin/orders', authenticate, isAdmin, async (req, res) => {
   try {
     const admin = await prisma.user.findUnique({
@@ -523,7 +629,6 @@ app.get('/api/admin/orders', authenticate, isAdmin, async (req, res) => {
   }
 });
 
-// ROUTE : Modifier le statut d'une commande
 app.put('/api/admin/orders/:id/status', authenticate, isAdmin, async (req, res) => {
   try {
     const { id } = req.params;
@@ -541,7 +646,6 @@ app.put('/api/admin/orders/:id/status', authenticate, isAdmin, async (req, res) 
   }
 });
 
-// ROUTE : Statistiques de la boutique de l'admin
 app.get('/api/admin/stats', authenticate, isAdmin, async (req, res) => {
   try {
     const admin = await prisma.user.findUnique({
@@ -571,7 +675,6 @@ app.get('/api/admin/stats', authenticate, isAdmin, async (req, res) => {
   }
 });
 
-// ROUTE : Récupérer LA boutique de l'admin
 app.get('/api/admin/tenants', authenticate, isAdmin, async (req, res) => {
   try {
     const admin = await prisma.user.findUnique({
@@ -594,7 +697,6 @@ app.get('/api/admin/tenants', authenticate, isAdmin, async (req, res) => {
   }
 });
 
-// ROUTE : Créer une boutique (admin)
 app.post('/api/admin/tenants', authenticate, isAdmin, async (req, res) => {
   try {
     const { name, subdomain, logo } = req.body;
@@ -611,7 +713,7 @@ app.post('/api/admin/tenants', authenticate, isAdmin, async (req, res) => {
 });
 
 // ============================================
-// DÉMARRAGE DU SERVEUR
+// DÉMARRAGE
 // ============================================
 
 app.listen(PORT, () => {

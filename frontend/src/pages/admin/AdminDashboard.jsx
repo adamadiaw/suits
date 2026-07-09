@@ -73,14 +73,14 @@ function AdminDashboard() {
         <div className="p-2.5 bg-gray-900 rounded-xl text-white">
           <Icons.Dashboard />
         </div>
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Tableau de bord</h1>
         <span className="text-sm text-gray-400 bg-gray-100 px-3 py-1 rounded-full">
           Vue d'ensemble
         </span>
       </div>
 
       {/* Cartes de statistiques */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-6">
         {statCards.map((stat, index) => (
           <div
             key={index}

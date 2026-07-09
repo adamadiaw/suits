@@ -7,6 +7,8 @@ import { productService } from '../services';
 import Toast from '../components/Toast';
 import { Icons } from '../icons';
 import { useToast } from '../hooks/useToast';
+import ReviewList from '../components/shared/ReviewList';
+
 
 
 function ProductDetail() {
@@ -237,6 +239,7 @@ function ProductDetail() {
                   </p>
                 )}
               </div>
+              <ReviewList productId={product.id} />
             </div>
           </div>
         </div>

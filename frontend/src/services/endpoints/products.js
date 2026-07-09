@@ -23,4 +23,9 @@ export const productService = {
 
   // Admin : Supprimer un produit
   adminDelete: (id) => api.delete(`/admin/products/${id}`),
+
+  // Avis
+  getReviews: (productId) => api.get(`/products/${productId}/reviews`),
+  addReview: (productId, data) => api.post(`/products/${productId}/reviews`, data),
+  adminDeleteReview: (reviewId) => api.delete(`/admin/reviews/${reviewId}`),
 };

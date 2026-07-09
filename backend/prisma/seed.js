@@ -105,6 +105,7 @@ async function main() {
       gender: 'femme',
       isFeatured: true,
       rating: 4.8,
+      reviewsCount: 0,
       tenantId: tenants[0].id,
     },
     {
@@ -120,6 +121,7 @@ async function main() {
       gender: 'unisexe',
       isFeatured: true,
       rating: 4.5,
+      reviewsCount: 0,
       tenantId: tenants[0].id,
     },
     {
@@ -135,6 +137,7 @@ async function main() {
       gender: 'homme',
       isFeatured: false,
       rating: 4.7,
+      reviewsCount: 0,
       tenantId: tenants[0].id,
     },
     {
@@ -150,6 +153,7 @@ async function main() {
       gender: 'femme',
       isFeatured: true,
       rating: 4.3,
+      reviewsCount: 0,
       tenantId: tenants[0].id,
     },
   ];
@@ -176,6 +180,7 @@ async function main() {
       gender: 'unisexe',
       isFeatured: true,
       rating: 4.7,
+      reviewsCount: 0,
       tenantId: tenants[1].id,
     },
     {
@@ -191,6 +196,7 @@ async function main() {
       gender: 'femme',
       isFeatured: true,
       rating: 4.9,
+      reviewsCount: 0,
       tenantId: tenants[1].id,
     },
     {
@@ -206,6 +212,7 @@ async function main() {
       gender: 'homme',
       isFeatured: false,
       rating: 4.4,
+      reviewsCount: 0,
       tenantId: tenants[1].id,
     },
     {
@@ -221,6 +228,7 @@ async function main() {
       gender: 'femme',
       isFeatured: false,
       rating: 4.2,
+      reviewsCount: 0,
       tenantId: tenants[1].id,
     },
   ];
@@ -247,6 +255,7 @@ async function main() {
       gender: 'femme',
       isFeatured: true,
       rating: 4.6,
+      reviewsCount: 0,
       tenantId: tenants[2].id,
     },
     {
@@ -262,6 +271,7 @@ async function main() {
       gender: 'homme',
       isFeatured: false,
       rating: 4.5,
+      reviewsCount: 0,
       tenantId: tenants[2].id,
     },
     {
@@ -277,6 +287,7 @@ async function main() {
       gender: 'unisexe',
       isFeatured: true,
       rating: 4.8,
+      reviewsCount: 0,
       tenantId: tenants[2].id,
     },
     {
@@ -292,6 +303,7 @@ async function main() {
       gender: 'femme',
       isFeatured: false,
       rating: 4.3,
+      reviewsCount: 0,
       tenantId: tenants[2].id,
     },
   ];
