@@ -6,16 +6,15 @@ OMNIA est une plateforme e-commerce SaaS (Software as a Service) qui permet de g
 
 ### Fonctionnalités principales
 
-- **Multi-boutique** : Chaque boutique est indépendante avec ses propres produits et administrateurs
-- **Catalogue produits** : Affichage, recherche, filtres (prix, genre, tailles)
-- **Panier** : Ajout/suppression avec sauvegarde par boutique
-- **Commandes** : Formulaire de livraison, historique des commandes
-- **Paiement** : Intégration Stripe (mode test)
-- **Avis clients** : Notation et commentaires sur les produits
-- **Administration** : Dashboard, gestion produits, commandes et boutiques
-- **Responsive** : Adapté à toutes les tailles d'écran
+**Multi-boutique** : Chaque boutique est indépendante avec ses propres produits et administrateurs
+**Catalogue produits** : Affichage, recherche, filtres (prix, genre, tailles)
+**Panier** : Ajout/suppression avec sauvegarde par boutique
+**Commandes** : Formulaire de livraison, historique des commandes
+**Paiement** : Intégration Stripe (mode test)
+**Avis clients** : Notation et commentaires sur les produits
+**Administration** : Dashboard, gestion produits, commandes et boutiques
+**Responsive** : Adapté à toutes les tailles d'écran
 
----
 
 ## Structure du projet
 projetOmnia/
@@ -35,8 +34,6 @@ projetOmnia/
 └── docker-compose.yml # Base de données PostgreSQL
 
 
----
-
 ## Installation
 
 ### Prérequis
@@ -50,10 +47,10 @@ git clone <url-du-repo>
 cd projetOmnia
 
 # Avec Podman
-podman-compose up -d
+podman compose up -d
 
 # Avec Docker
-docker-compose up -d
+docker compose up -d
 
 cd backend
 npm install
@@ -62,10 +59,10 @@ npm install
 cp .env.example .env
 
 # Éditer .env avec vos informations
-# - DATABASE_URL
-# - JWT_SECRET
-# - STRIPE_SECRET_KEY
-# - STRIPE_PUBLISHABLE_KEY
+DATABASE_URL
+JWT_SECRET
+STRIPE_SECRET_KEY
+STRIPE_PUBLISHABLE_KEY
 
 # Créer les tables et générer le client Prisma
 npx prisma migrate dev --name init
@@ -86,17 +83,17 @@ cp .env.example .env
 # Démarrer l'application
 npm run dev
 
-#Commandes Principales Back
+# Commandes Principales Back
 npm run dev      # Mode développement
 npm run seed     # Remplir la base avec des données de test
 npx prisma studio # Interface graphique de la base de données
 
-#Commandes Principales Front
+# Commandes Principales Front
 npm run dev      # Mode développement
 npm run build    # Construction pour la production
 npm run preview  # Aperçu de la version construite
 
-# Technologies utilisées
+## Technologies utilisées
 
 # Backend
 Node.js + Express - Serveur API
@@ -116,3 +113,5 @@ React Router - Navigation
 # Base de données
 PostgreSQL - Base de données relationnelle
 Podman/Docker - Conteneurisation
+
+# Adama Diaw
